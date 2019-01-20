@@ -37,43 +37,22 @@ class GA(object):
         return ''.join( [self.random_char() for _ in range(self.random_length())] )
 
     def mutate(self, ind):
-        state = rand(0, 2)
-        if state == 0:
-            if len(ind) <= 2:
-                return ind
-            idx = rand(0, len(ind)-2)
-            return ind[:idx] + ind[idx+2:]
-        if state == 1:
-            if len(ind) <= 2:
-                return ind
-            idx = rand(0, len(ind)-2)
-            return ind[:idx] + self.random_char() + ind[idx:]
-        if state == 2:
-            if len(ind) <= 2:
-                return ind
-            idx = rand(0, len(ind)-2)
-            return ind[:idx] + self.random_char() + ind[idx+1:]
-
+        idx = rand(0, len(ind)-1)
+        return ind[:idx] + self.random_char() + ind[idx:]
 
     def fitness(self, ind):
         supseq_score = superseq(self._s1, ind) + superseq(self._s2, ind)
         return -(2*supseq_score - len(ind))
 
     def crossover(self, ind1, ind2):
-        if len(ind1) >= 3:
-            i1 = rand(0, len(ind1) - 2)
-            j1 = rand(i1, len(ind1) - 1)
-            ind1 = ind1[i1:j1]
-        if len(ind2) >= 3:
-            i2 = rand(0, len(ind2) - 2)
-            j2 = rand(i2, len(ind2) - 1)
-            ind2 = ind2[i2:j2]
-        return ind1 + ind2
+        def randelt(a, b):
+            return a if rand(0, 1) else b
+        return ''.join([randelt(ind1[i], ind2[i]) for i in range(min(len(ind1),
+                                                                     len(ind2)))])
 
     def run(self, size=10, its=1000):
         pool = [ self.random_individual() for _ in range(size) ]
         for i in range(its):
-            print(1+i, '\n\t'.join(pool))
             for i in range(size//2):
                 pool.append(self.mutate(pool[i]))
             for i in range(10):
@@ -81,12 +60,14 @@ class GA(object):
                     if i != j:
                         pool.append(self.crossover(pool[i], pool[j]))
             pool = sorted(set([p for p in pool if p]), key=self.fitness)[:size]
-        return pool[:10]
+        return pool
 
 
 def main(s1, s2):
     ga = GA(s1, s2)
-    print(ga.run())
+    pool = ga.run()
+    for e in pool:
+        print(ga.fitness(e), '\t', e)
 
 if __name__ == '__main__':
     from sys import argv
