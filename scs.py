@@ -38,7 +38,8 @@ class GA(object):
 
     def mutate(self, ind):
         idx = rand(0, len(ind)-1)
-        return ind[:idx] + self.random_char() + ind[idx:]
+        deloradd = rand(0,2)
+        return ind[:idx] + self.random_char() + ind[idx+deloradd-1:]
 
     def fitness(self, ind):
         supseq_score = superseq(self._s1, ind) + superseq(self._s2, ind)
