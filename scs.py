@@ -2,20 +2,20 @@
 from __future__ import print_function
 from random import randint as rand
 
-def superseq(a, b):
-    a_idx, b_idx = 0, 0
+def superseq(sub, sup):
+    sub_idx, sup_idx = 0, 0
     hits = 0
-    while a_idx < len(a) and b_idx < len(b):
+    while sub_idx < len(sub) and sup_idx < len(sup):
         hc = False
-        for i in range(b_idx, len(b)):
-            if a[a_idx] == b[i]:
+        for i in range(sup_idx, len(sup)):
+            if sub[sub_idx] == sup[i]:
                 hits += 1
-                a_idx += 1
-                b_idx = i
+                sub_idx += 1
+                sup_idx = i+1
                 hc = True
                 break
         if not hc:
-            a_idx += 1
+            sub_idx += 1
     return hits
 
 class GA(object):
@@ -37,13 +37,22 @@ class GA(object):
         return ''.join( [self.random_char() for _ in range(self.random_length())] )
 
     def mutate(self, ind):
-        idx = rand(0, len(ind)-1)
-        deloradd = rand(0,2)
-        return ind[:idx] + self.random_char() + ind[idx+deloradd-1:]
+        if len(ind) <= 2:
+            return ind
+        ind = list(ind)
+        idx = rand(1, len(ind)-2)
+        ch = self.random_char()
+        # okay ... add, delete, or modify depends on this:
+        left = rand(0,1)
+        right = rand(0,1)
+        return ''.join(
+            ind[:idx - left] +
+            ind[idx - 1 + right:]
+        )
 
     def fitness(self, ind):
         supseq_score = superseq(self._s1, ind) + superseq(self._s2, ind)
-        return -(2*supseq_score - len(ind))
+        return -(supseq_score - len(ind)//4)
 
     def crossover(self, ind1, ind2):
         def randelt(a, b):
@@ -51,7 +60,7 @@ class GA(object):
         return ''.join([randelt(ind1[i], ind2[i]) for i in range(min(len(ind1),
                                                                      len(ind2)))])
 
-    def run(self, size=10, its=1000):
+    def run(self, size=100, its=100):
         pool = [ self.random_individual() for _ in range(size) ]
         for i in range(its):
             for i in range(size//2):
